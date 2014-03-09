@@ -52,7 +52,7 @@ class User < ActiveRecord::Base
       return -1
     end
     if @user.broadcasting
-      return locations.last
+      return @user.locations.last
     else
       return -2
     end

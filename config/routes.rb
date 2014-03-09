@@ -56,5 +56,8 @@ Caravan::Application.routes.draw do
 
 post 'api/login' => 'api#login'
 post 'api/create_user' => 'api#create_user'
+post 'api/broadcast' => 'api#broadcast'
+post 'api/stop_broadcast' => 'api#stop_broadcast'
+get 'api/follow' => 'api#follow'
 
 end

@@ -38,5 +38,103 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":-3}' == @response.body, @response.body
   end
-    
+
+  test "nonexistant user" do 
+    @username = SecureRandom.hex
+    post(:login, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+  end
+  
+  test "incorrect password" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to login
+    post(:login, {'username' => @username, 'password' => "not the password"})
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+  end
+  
+  test "good login" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to login
+    post(:login, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+  end
+
+
+  test "broadcast bad username" do
+    #broadcast
+    @username = SecureRandom.hex
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+  end
+  
+  test "broadcast bad password" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #broadcast
+    post(:broadcast, {'username' => @username, 'password' => "passwordpasswordpasswordpasswo32passwordpasswordpasswordpasswo64passwordpasswordpasswordpasswo32passwordpasswordpasswordpassw128passwordpasswordpasswordpasswo32passwordpasswordpasswordpasswo64passwordpasswordpasswordpasswo32passwordpasswordpasswordpassw256",
+           'latitude' => "122.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+
+    post(:broadcast, {'username' => @username, 'password' => "", 'latitude' => "122.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+
+    post(:broadcast, {'username' => @username, 'password' => "not the password", 'latitude' => "122.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+  end
+  
+  test "broadcast bad location" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #bad lat
+
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "182.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body	
+    #bad long
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "12.34", 'longitude' => "192.34" })
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body	
+    #bad lat
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "-232.34", 'longitude' => "12.34" })
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body	
+    #bad long
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "12.34", 'longitude' => "-212.34" })
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body	
+  end
+
+  test "good broadcast" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #broadcast
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+  end	
+  
 end
