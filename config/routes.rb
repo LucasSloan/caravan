@@ -53,4 +53,8 @@ Caravan::Application.routes.draw do
   #     # (app/controllers/admin/products_controller.rb)
   #     resources :products
   #   end
+
+post 'api/login' => 'api#login'
+post 'api/create_user' => 'api#create_user'
+
 end
