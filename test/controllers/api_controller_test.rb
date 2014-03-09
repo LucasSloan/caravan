@@ -136,5 +136,25 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body	
   end	
+
+  test "stop broadcasting nonexistant user" do 
+    @username = SecureRandom.hex
+    post(:stop_broadcast, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+  end
+  
+  test "stop broadcasting incorrect password" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to stop broadcasting
+    post(:stop_broadcast, {'username' => @username, 'password' => "not the password"})
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+  end
+    
   
 end
