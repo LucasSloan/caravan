@@ -156,6 +156,27 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":-2}' == @response.body, @response.body
   end
     
+  test "stop broadcast" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #broadcast
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    get(:follow, {'username' => @username})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":122.34,"longitude":32.54}' == @response.body, @response.body
+    post(:stop_broadcast, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    get(:follow, {'username' => @username})
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body	
+  end	
+
   
   #FOLLOW TESTS START HERE
   
@@ -189,10 +210,10 @@ class ApiControllerTest < ActionController::TestCase
     post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body	
-	#try to follow
-	get(:follow, {'username' => @username})
-	assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
+    #try to follow
+    get(:follow, {'username' => @username})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":122.34,"longitude":32.54}' == @response.body, @response.body
   end
   
   
