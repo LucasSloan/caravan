@@ -157,4 +157,43 @@ class ApiControllerTest < ActionController::TestCase
   end
     
   
+  #FOLLOW TESTS START HERE
+  
+  test "follow non-existent user" do
+    @username = SecureRandom.hex
+    get(:follow, {'username' => @username})
+	assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+	
+  end
+  
+  test "follow non-broadcasting user" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	#try to follow
+	get(:follow, {'username' => @username})
+	assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+  end
+  
+  test "good follow" do
+    #create account
+    @username = SecureRandom.hex
+    post(:create_user, {'username' => @username, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #broadcast
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	#try to follow
+	get(:follow, {'username' => @username})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+  end
+  
+  
 end
