@@ -18,20 +18,20 @@ class UserTest < ActiveSupport::TestCase
 
 
   test "test good create" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("username0","password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
 
 	s = ""
 	for i in 1..128
       s << "a"
     end
 	result = User.add(s,"password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
   end
  
   test "test create with invalid username" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("","password")
 	assert(result ==ERR_CREATE_BAD_USERNAME,"empty username should not be accepted")
 	
@@ -44,7 +44,7 @@ class UserTest < ActiveSupport::TestCase
   end
   
   test "test create with bad password" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("username1","")
 	assert(result ==ERR_CREATE_BAD_PASSWORD,"empty password should not be accepted")
 	
@@ -57,43 +57,43 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "test create existent user" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	
 	result = User.add("username3","password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
 	
 	result = User.add("username3","password")
 	assert(result == ERR_CREATE_USER_EXISTS, "trying to add an existing should result in error")
   end
 
   test "test validate_user with bad username" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.validate_user("not_user","password")
 	assert(result ==ERR_LOGIN_BAD_USERNAME,"unregistered username should not be accepted")
   end
 
   test "test validate_user with bad password" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("username4","password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
 	
 	result = User.validate_user("username4","not the password")
 	assert(result ==ERR_LOGIN_BAD_PASSWORD,"username with wrong password should not be accepted")
   end
   
   test "test validate_user with valid user" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("username5","password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
 	
 	result = User.validate_user("username5","password")
-	assert(result.is_a? User,"registered user should not be validated")
+	assert((result.is_a? User),"registered user should not be validated")
   end
   
   test "test start_broadcast and stop_broadcast" do
-    User.testAPI_resetFixture
+    #User.testAPI_resetFixture
 	result = User.add("username6","password")
-	assert(result.is_a? User, "valid add should return the new user")
+	assert((result.is_a? User), "valid add should return the new user")
 	
 	result.start_broadcast(89.9,90.1)
 	assert(result.broadcasting == true, "start_broadcast should make 'broadcasting' true")
@@ -107,27 +107,25 @@ class UserTest < ActiveSupport::TestCase
   end
   
   test "test follow non-existant user" do
-    User.testAPI_resetFixture
-	follower = User.add("username7","password")
-	result = follower.follow("username8")
+    #User.testAPI_resetFixture
+	result = User.follow("username8")
 	assert(result ==ERR_FOLLOW_BAD_USERNAME,"cannot follow non-existant user")
   end
   
   test "test follow non-broadcasting user" do
-    User.testAPI_resetFixture
-	follower = User.add("username8","password")
+    #User.testAPI_resetFixture
 	other = User.add("username9","password")
-	result = follower.follow("username9")
-	assert(result ==ERR_FOLLOW_BAD_USERNAME,"cannot follow non-broadcasting user")
+	result = User.follow("username9")
+	assert(result ==ERR_FOLLOW_NOT_BROADCASTING,"cannot follow non-broadcasting user")
   end  
   
   
   test "test follow broadcasting user" do
-    User.testAPI_resetFixture
-	follower = User.add("username10","password")
+    #User.testAPI_resetFixture
 	other = User.add("username11","password")
 	other.start_broadcast(89.9,90.1)
 	
-	result = follower.follow("username11")
-	assert(result ==other.locations.last,"can follow broadcasting user")
+	result = User.follow("username11")
+	assert(result == other.locations.last,"can follow broadcasting user")
   end  
+end
