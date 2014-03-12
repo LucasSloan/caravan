@@ -1,0 +1,12 @@
+class ApiController < ApplicationController
+
+  def login
+    @user = User.validate_user(params[:username], params[:password])
+    if @user.is_a? User
+      render json: @user = Response.new(1)
+    else
+      render json: @user
+    end
+  end
+
+end
