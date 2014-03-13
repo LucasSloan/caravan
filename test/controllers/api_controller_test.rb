@@ -182,7 +182,7 @@ class ApiControllerTest < ActionController::TestCase
   
   test "follow non-existent user" do
     @username = SecureRandom.hex
-    get(:follow, {'username' => @username})
+    post(:follow, {'username' => @username})
 	assert_response(:success)
     assert '{"status code":-1}' == @response.body, @response.body
 	
@@ -195,7 +195,7 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 	#try to follow
-	get(:follow, {'username' => @username})
+	post(:follow, {'username' => @username})
 	assert_response(:success)
     assert '{"status code":-2}' == @response.body, @response.body
   end
@@ -211,7 +211,7 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body	
     #try to follow
-    get(:follow, {'username' => @username})
+    post(:follow, {'username' => @username})
     assert_response(:success)
     assert '{"status code":1,"latitude":122.34,"longitude":32.54}' == @response.body, @response.body
   end
