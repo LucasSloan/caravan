@@ -1,0 +1,11 @@
+Testing:
+
+(run on a computer with Postgres, with database user: caravan, password: password)
+
+rake db:create
+
+rake db:migrate
+
+rake test test/controllers/api_controller_test.rb
+
+rake test test/models/user_test.rb
