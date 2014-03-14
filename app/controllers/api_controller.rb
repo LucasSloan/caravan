@@ -31,7 +31,7 @@ class ApiController < ApplicationController
     if user.is_a? User
       lat = params[:latitude].to_f
       long = params[:longitude].to_f
-      if lat > 180 or lat < -180 or long > 180 or long < -180
+      if lat > 90 or lat < -90 or long > 180 or long < -180
         msg = { 'status code' => -3 }
       else
         user.start_broadcast(lat, long)
