@@ -1,0 +1,4 @@
+class PositionsToText < ActiveRecord::Migration
+  def change
+  end
+end

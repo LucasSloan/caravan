@@ -1,0 +1,4 @@
+class HerokuText < ActiveRecord::Migration
+  def change
+  end
+end
