@@ -132,7 +132,7 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #broadcast
-    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body	
   end	
@@ -163,12 +163,12 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #broadcast
-    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     get(:follow, {'username' => @username})
     assert_response(:success)
-    assert '{"status code":1,"latitude":122.34,"longitude":32.54}' == @response.body, @response.body
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
     post(:stop_broadcast, {'username' => @username, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
@@ -207,13 +207,13 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #broadcast
-    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "122.34", 'longitude' => "32.54" })
+    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body	
     #try to follow
     post(:follow, {'username' => @username})
     assert_response(:success)
-    assert '{"status code":1,"latitude":122.34,"longitude":32.54}' == @response.body, @response.body
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
   end
   
   
