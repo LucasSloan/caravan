@@ -45,13 +45,72 @@ class ApiController < ApplicationController
     render :json => msg
   end
 
-  def follow
-    location = User.follow(params[:username])
-    puts location
-    if location.is_a? Array
-      msg = { 'status code' => 1 , 'latitude' => location[0], 'longitude' => location[1]}
+  def follow_request
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      msg = { 'status code' => User.follow_request(params[:username], user)}
     else
-      msg = { 'status code' => location }
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def follow_cancellation
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      msg = { 'status code' => User.follow_cancellation(params[:username], user)}
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def check_permission
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      msg = { 'status code' => user.check_permission(params[:username])}
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def follow
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      location = User.follow(params[:username], user)
+      puts location
+      if location.is_a? Position
+        msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}
+      else
+        msg = { 'status code' => location - 2 }
+      end
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def check_requesters
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      if user.broadcasting
+        msg = { 'status code' => 1, 'follow requests' => user.check_requesters}
+      else
+        msg = { 'status code' => -3 }
+      end
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def invitation_response
+    user = User.validate_user(params[:myUsername], params[:myPassword])
+    if user.is_a? User
+      msg = { 'status code' => user.invitation_response(params[:username])}
+    else
+      msg = { 'status code' => user }
     end
     render :json => msg
   end

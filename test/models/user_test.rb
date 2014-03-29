@@ -126,6 +126,37 @@ class UserTest < ActiveSupport::TestCase
 	other.start_broadcast(89.9,90.1)
 	
 	result = User.follow("username11")
-	assert(result == other.locations.last,"can follow broadcasting user")
+	assert(result == other.positions.first,"can follow broadcasting user")
   end  
+
+  test "test follow request" do
+    broadcaster = User.add("username12","password")
+    follower = User.add("username13","password")
+    broadcaster.start_broadcast(0,0)
+    assert(User.follow_request(broadcaster.username, follower) == 1, "Request failled")
+    assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
+    follower2 = User.add("username14", "password")
+    assert(User.follow_request(broadcaster.username, follower2) == 1, "Request failled")
+    assert(broadcaster.follow_requests.size == 2, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
+    assert(broadcaster.follow_requests.last.requester == follower2.id, "Incorrect requester id")
+  end
+
+  test "test follow cancellation" do
+    broadcaster = User.add("username15","password")
+    follower = User.add("username16","password")
+    broadcaster.start_broadcast(0,0)
+    assert(User.follow_request(broadcaster.username, follower) == 1, "Request failled")
+    assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
+    follower2 = User.add("username17", "password")
+    assert(User.follow_request(broadcaster.username, follower2) == 1, "Request failled")
+    assert(broadcaster.follow_requests.size == 2, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
+    assert(broadcaster.follow_requests.last.requester == follower2.id, "Incorrect requester id")
+    assert(User.follow_cancellation(broadcaster.username, follower) == 1, "Cancellation failed")
+    assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.first.requester == follower2.id, "Incorrect requester id")
+  end
 end

@@ -155,7 +155,7 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":-2}' == @response.body, @response.body
   end
-    
+  
   test "stop broadcast" do
     #create account
     @username = SecureRandom.hex
@@ -166,55 +166,113 @@ class ApiControllerTest < ActionController::TestCase
     post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-    get(:follow, {'username' => @username})
+    #follow
+    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+    #stop broadcast
     post(:stop_broadcast, {'username' => @username, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-    get(:follow, {'username' => @username})
+    #follow again
+    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
-    assert '{"status code":-2}' == @response.body, @response.body	
+    assert '{"status code":-4}' == @response.body, @response.body	
   end	
 
   
   #FOLLOW TESTS START HERE
   
-  test "follow non-existent user" do
-    @username = SecureRandom.hex
-    post(:follow, {'username' => @username})
-	assert_response(:success)
+  test "follow with bad myUsername" do
+    @username1 = SecureRandom.hex
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
     assert '{"status code":-1}' == @response.body, @response.body
-	
+  end
+  
+  test "follow with bad myPassword" do
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to follow
+    @username2 = SecureRandom.hex
+    post(:follow, {'myUsername' => @username1, 'myPassword' => "not_the_password", 'username' => @username2})
+    assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+  end  
+  
+  
+  test "follow non-existent user" do
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to follow
+    @username2 = SecureRandom.hex
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body
   end
   
   test "follow non-broadcasting user" do
-    #create account
-    @username = SecureRandom.hex
-    post(:create_user, {'username' => @username, 'password' => "password"})
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-	#try to follow
-	post(:follow, {'username' => @username})
-	assert_response(:success)
-    assert '{"status code":-2}' == @response.body, @response.body
+    #create account2
+    @username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #try to follow
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":-4}' == @response.body, @response.body
   end
   
   test "good follow" do
-    #create account
-    @username = SecureRandom.hex
-    post(:create_user, {'username' => @username, 'password' => "password"})
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #create account2
+    @username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #broadcast
-    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body	
+    assert '{"status code":1}' == @response.body, @response.body
+    #submit follow_request
+    post(:follow_request, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #check permission before handshake
+    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":2}' == @response.body, @response.body
+    #fetch requester list
+    post(:check_requesters, {'myUsername' => @username2,'myPassword' =>"password", })
+    assert_response(:success)
+    assert '{"status code":1,"follow requests":["%s"]}'%@username1 == @response.body, @response.body
+    #permit follow
+    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username1 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #check permission after handshake
+    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
     #try to follow
-    post(:follow, {'username' => @username})
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
   end
-  
-  
+
 end

@@ -11,18 +11,49 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140314164953) do
+ActiveRecord::Schema.define(version: 20140324233737) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
+  create_table "follow_requests", force: true do |t|
+    t.integer  "requester"
+    t.integer  "user_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "follow_requests", ["user_id"], name: "index_follow_requests_on_user_id", using: :btree
+
+  create_table "followers", force: true do |t|
+    t.integer  "follower_id"
+    t.integer  "user_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "followers", ["user_id"], name: "index_followers_on_user_id", using: :btree
+
+  create_table "positions", force: true do |t|
+    t.float    "latitude"
+    t.float    "longitude"
+    t.datetime "timestamp"
+    t.integer  "user_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "positions", ["user_id"], name: "index_positions_on_user_id", using: :btree
+
   create_table "users", force: true do |t|
     t.string   "username"
-    t.string   "password"
     t.text     "locations"
     t.boolean  "broadcasting"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "password_digest"
   end
+
+  add_index "users", ["username"], name: "index_users_on_username", using: :btree
 
 end
