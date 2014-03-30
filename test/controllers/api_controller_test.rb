@@ -156,63 +156,691 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":-2}' == @response.body, @response.body
   end
     
-  test "stop broadcast" do
+  test "stop broadcast" do  #kinda cheating with using 'follow' here and skipping the confirmation process. May cause errors.
     #create account
     @username = SecureRandom.hex
     post(:create_user, {'username' => @username, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+	
     #broadcast
     post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-    get(:follow, {'username' => @username})
+	#follow
+    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+	#stop broadcast
     post(:stop_broadcast, {'username' => @username, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-    get(:follow, {'username' => @username})
+	#follow again
+    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
-    assert '{"status code":-2}' == @response.body, @response.body	
+    assert '{"status code":-4}' == @response.body, @response.body	
   end	
 
+  # FOLLOW REQUEST TESTS
   
-  #FOLLOW TESTS START HERE
-  
-  test "follow non-existent user" do
+  test "follow request with bad myUsername" do
     @username = SecureRandom.hex
-    post(:follow, {'username' => @username})
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)
     assert '{"status code":-1}' == @response.body, @response.body
 	
   end
-  
-  test "follow non-broadcasting user" do
-    #create account
+
+  test "follow request with bad password" do
     @username = SecureRandom.hex
-    post(:create_user, {'username' => @username, 'password' => "password"})
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body
+	
+  end
+  
+  test "follow request with bad broadcaster username" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username})
+	assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body
+  end
+  
+
+  test "follow request with non-broadcasting broadcaster username" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body  
+  end
+  
+  test "good follow request" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+  end
+  
+  
+  
+  # FOLLOW_CANCELLATION TESTS
+  
+  test "follow_cancellation with bad myUsername" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+	
+	#follow cancellation
+	post(:follow_cancellation, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)	
+	assert '{"status code":-1}' == @response.body, @response.body 
+	
+  end
+  
+  test "follow_cancellation with bad password" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+	
+	#follow cancellation
+	post(:follow_cancellation, {'myUsername' => @username1, 'myPassword' =>"not_password", 'username' =>@username2})
+	assert_response(:success)	
+	assert '{"status code":-2}' == @response.body, @response.body   
+  end  
+  
+  test "follow_cancellation with bad broadcaster username" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+	
+	#follow cancellation
+	post(:follow_cancellation, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username})
+	assert_response(:success)	
+	assert '{"status code":-3}' == @response.body, @response.body   
+  end  
+  
+  test "follow_cancellation with non-broadcasting broadcaster username" do #Is this one necessary? You won't get onto the 
+																		   # requests list if the guy is not broadcasting. Or is this for if he stops before you cancel?
+																			# Also, what if you are not following anyone when you use this?
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+	
+	#stop broadcast
+    post(:stop_broadcast, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#follow cancellation
+	post(:follow_cancellation, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)	
+	assert '{"status code":-4}' == @response.body, @response.body																			
+  end  
+  
+  test "good follow_cancellation" do
+     @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	
+	#follow request
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+	
+	
+	#follow cancellation
+	post(:follow_cancellation, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)	
+	assert '{"status code":-4}' == @response.body, @response.body	 
+  end
+
+
+  # GET_FOLLOW_REQUEST TESTS
+  
+  test "get_follow_request with bad myUsername" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#get follow requests
+	post(:get_follow_request, {'myUsername' => @username, 'myPassword' =>"password"})
+	assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body    
+	 
+  end
+  
+  test "get_follow_request with bad myPassword" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#get follow requests
+	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body      
+  end
+
+  test "get_follow_request with non-broadcasting myUsername" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#get follow requests
+	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"password"})
+	assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body     
+  end
+
+  test "good get_follow_request" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	#get follow requests when there are none
+	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
+
+	
+	#follow request from account1
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body    
+		
+	
+	
+	#get follow requests when there is one
+	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
+	
+  end  
+  
+  
+  # INVITATION_RESPONSE TESTS
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+ 
+  test "invitation response with bad myUsername" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	#follow request from account1 
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body   
+
+	post(:invitation_response, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username1})
+	assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body   
+  end  
+
+  test "invitation response with bad password" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	#follow request from account1 
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body   
+
+	#invitation response from account2
+	post(:invitation_response, {'myUsername' => @username2, 'myPassword' =>"not_password", 'username' =>@username1})
+	assert_response(:success)
+    assert '{"status code":-2}' == @response.body, @response.body     
+  end  
+ 
+  test "invitation response with non-broadcasting broadcaster user" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+
+	#invitation response from account2
+	post(:invitation_response, {'myUsername' => @username2, 'myPassword' =>"password", 'username' =>@username1})
+	assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body      
+  end   
+  
+  test "invitation response with bad follower username" do
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#broadcast from account 2
+	post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+	#follow request from account1 
+	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
+	assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body   
+
+	#invitation response from account2
+	post(:invitation_response, {'myUsername' => @username2, 'myPassword' =>"password", 'username' =>@username})
+	assert_response(:success)
+    assert '{"status code":-4}' == @response.body, @response.body     
+  end  
+  
+  
+  
+  
+  
+  
+  
+  
+  #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  
+  
+  
+  
+  
+  
+  
+  
+  test "good invitation response" do #design doc contradicts itself; APIController class gives this method 4 params, API documentations gives it 3
+  #INCOMPLETE TEST
+    @username = SecureRandom.hex
+	#create account1
+	@username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#create account2
+	@username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+  end  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  # CHECK_PERMISSION TESTS
+  
+  test "good permission check - permitted" do
+  
+  end
+  
+  test "good permission check - not permitted" do
+  
+  end
+
+  test "check permission with bad myUsername" do
+  
+  end  
+
+  test "check permission with bad password" do
+  
+  end  
+
+  test "check permission with bad myUsername" do
+  
+  end  
+
+  
+  
+  #FOLLOW TESTS START HERE, need editing
+  
+  test "follow with bad myUsername" do
+	@username1 = SecureRandom.hex
+	post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+	assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+  end
+  
+  test "follow with bad myPassword" do
+	#create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 	#try to follow
-	post(:follow, {'username' => @username})
+	@username2 = SecureRandom.hex
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"not_the_password", 'username' =>@username2 })
 	assert_response(:success)
     assert '{"status code":-2}' == @response.body, @response.body
-  end
+  end  
   
-  test "good follow" do
-    #create account
-    @username = SecureRandom.hex
-    post(:create_user, {'username' => @username, 'password' => "password"})
+  
+  test "follow non-existent user" do
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
-    #broadcast
-    post(:broadcast, {'username' => @username, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+	#try to follow
+	@username2 = SecureRandom.hex
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+	assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body
+	
+  end
+  
+  test "follow non-broadcasting user" do
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body	
-    #try to follow
-    post(:follow, {'username' => @username})
+    assert '{"status code":1}' == @response.body, @response.body
+	#create account2
+    @username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
     assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	#try to follow
+	post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+	assert_response(:success)
+    assert '{"status code":-4}' == @response.body, @response.body
+  end
+  
+  test "follow broadcasting user without access" do
+  
+  end
+  
+  
+  
+  test "good follow" do  #REQUIRES EDITING!!!!
+    #create account1
+    @username1 = SecureRandom.hex
+    post(:create_user, {'username' => @username1, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	#create account2
+    @username2 = SecureRandom.hex
+    post(:create_user, {'username' => @username2, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	#broadcast
+    post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	#try to follow
+	post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+	assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
   end
   
