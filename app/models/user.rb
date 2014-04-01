@@ -71,31 +71,34 @@ class User < ActiveRecord::Base
   def self.follow_request(username, requester)
     @user = User.find_by(username: username)
     if @user == nil
-      return -1
+      return -3
     end
     if @user.broadcasting
       @user.follow_requests.create(requester: requester.id)
       return 1
     else
-      return -2
+      return -4
     end
   end
 
   def self.follow_cancellation(username, requester)
     @user = User.find_by(username: username)
     if @user == nil
-      return -1
+      return -3
     end
     if @user.broadcasting
       @user.follow_requests.destroy(FollowRequest.find_by(requester: requester.id))
       return 1
     else
-      return -2
+      return -4
     end
   end
 
   def invitation_response(username)
     @user = User.find_by(username: username)
+    if !self.broadcasting
+      return -3
+    end
     if @user == nil
       return -4
     end

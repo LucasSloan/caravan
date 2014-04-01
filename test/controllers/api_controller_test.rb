@@ -156,7 +156,7 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":-2}' == @response.body, @response.body
   end
     
-  test "stop broadcast" do  #kinda cheating with using 'follow' here and skipping the confirmation process. May cause errors.
+  test "stop broadcast" do
     #create account
     @username = SecureRandom.hex
     post(:create_user, {'username' => @username, 'password' => "password"})
@@ -168,15 +168,15 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 	#follow
-    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
+    get(:follow_request, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+    assert '{"status code":1}' == @response.body, @response.body
 	#stop broadcast
     post(:stop_broadcast, {'username' => @username, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 	#follow again
-    get(:follow, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
+    get(:follow_request, {'myUsername' => @username, 'myPassword' =>"password", 'username' =>@username})
     assert_response(:success)
     assert '{"status code":-4}' == @response.body, @response.body	
   end	
@@ -267,7 +267,7 @@ class ApiControllerTest < ActionController::TestCase
 	#follow request
 	post(:follow_request, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)
-    assert '{"status code":-3}' == @response.body, @response.body  
+    assert '{"status code":-4}' == @response.body, @response.body  
   end
   
   test "good follow request" do
@@ -462,7 +462,7 @@ class ApiControllerTest < ActionController::TestCase
 	#follow cancellation
 	post(:follow_cancellation, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)	
-	assert '{"status code":-4}' == @response.body, @response.body	 
+	assert '{"status code":1}' == @response.body, @response.body	 
   end
 
 
@@ -483,7 +483,7 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body
 	
 	#get follow requests
-	post(:get_follow_request, {'myUsername' => @username, 'myPassword' =>"password"})
+	post(:check_requesters, {'myUsername' => @username, 'myPassword' =>"password"})
 	assert_response(:success)
     assert '{"status code":-1}' == @response.body, @response.body    
 	 
@@ -504,7 +504,7 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body
 	
 	#get follow requests
-	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	post(:check_requesters, {'myUsername' => @username1, 'myPassword' =>"not_password"})
 	assert_response(:success)
     assert '{"status code":-2}' == @response.body, @response.body      
   end
@@ -524,7 +524,7 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body
 	
 	#get follow requests
-	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"password"})
+	post(:check_requesters, {'myUsername' => @username1, 'myPassword' =>"password"})
 	assert_response(:success)
     assert '{"status code":-3}' == @response.body, @response.body     
   end
@@ -550,9 +550,9 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body	
 	
 	#get follow requests when there are none
-	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	post(:check_requesters, {'myUsername' => @username2, 'myPassword' =>"password"})
 	assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
+    assert '{"status code":1,"follow requests":[]}' == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
 
 	
 	#follow request from account1
@@ -563,9 +563,9 @@ class ApiControllerTest < ActionController::TestCase
 	
 	
 	#get follow requests when there is one
-	post(:get_follow_request, {'myUsername' => @username1, 'myPassword' =>"not_password"})
+	post(:check_requesters, {'myUsername' => @username2, 'myPassword' =>"password"})
 	assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
+    assert '{"status code":1,"follow requests":["%s"]}'%@username1 == @response.body, @response.body   #Will cause an error; the API doesn't specify the name of the list to be returned; please change this line after you write the method.
 	
   end  
   
@@ -752,7 +752,7 @@ class ApiControllerTest < ActionController::TestCase
 	#check permission from account1 
 	post(:check_permission, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)
-    assert '{"status code":2, "accepted":false}' == @response.body, @response.body   	
+    assert '{"status code":2}' == @response.body, @response.body   	
 		
 
 	#invitation response from account2
@@ -763,7 +763,7 @@ class ApiControllerTest < ActionController::TestCase
 	#check permission from account1 (again)
 	post(:check_permission, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)
-    assert '{"status code":1, "accepted":true}' == @response.body, @response.body  	
+    assert '{"status code":1}' == @response.body, @response.body  	
   
   end
   
@@ -859,7 +859,7 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body
 	
 	#check permission from account1 
-	post(:check_permission, {'myUsername' => @username1, 'myPassword' =>"not_password", 'username' =>@username2})
+	post(:check_permission, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username2})
 	assert_response(:success)
     assert '{"status code":-3}' == @response.body, @response.body    
   end    
@@ -891,7 +891,7 @@ class ApiControllerTest < ActionController::TestCase
 	#check permission from account1 
 	post(:check_permission, {'myUsername' => @username1, 'myPassword' =>"password", 'username' =>@username})
 	assert_response(:success)
-    assert '{"status code":-3}' == @response.body, @response.body   	
+    assert '{"status code":-4}' == @response.body, @response.body   	
 		
   end  
 
