@@ -87,7 +87,12 @@ class User < ActiveRecord::Base
       return -3
     end
     if @user.broadcasting
-      @user.follow_requests.destroy(FollowRequest.find_by(requester: requester.id))
+      if @user.follow_requests.exists?(FollowRequest.find_by(requester: requester.id))
+        @user.follow_requests.destroy(FollowRequest.find_by(requester: requester.id))
+      end
+      if @user.followers.exists?(Follower.find_by(follower_id: requester.id))
+        @user.followers.destroy(Follower.find_by(follower_id: requester.id))
+      end
       return 1
     else
       return -4
@@ -105,10 +110,6 @@ class User < ActiveRecord::Base
     if self.follow_requests.exists?(FollowRequest.find_by(requester: @user.id))
       self.follow_requests.destroy(FollowRequest.find_by(requester: @user.id))
       self.followers.create(follower_id: @user.id)
-      puts self.followers.exists?(Follower.find_by(follower_id: @user.id))
-      puts self.followers
-      puts "invited from"
-      puts self
       return 1
     else
       return -4
@@ -135,6 +136,7 @@ class User < ActiveRecord::Base
     self.follow_requests.each do |r|
       list << User.find(r.requester).username
     end
+    self.follow_requests.destroy
     return list
   end
 
