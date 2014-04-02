@@ -973,12 +973,21 @@ class ApiControllerTest < ActionController::TestCase
     post(:create_user, {'username' => @username2, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+    #create account3
+    @username3 = SecureRandom.hex
+    post(:create_user, {'username' => @username3, 'password' => "password"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
     #broadcast
     post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #submit follow_request
     post(:follow_request, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #submit follow_request
+    post(:follow_request, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #check permission before handshake
@@ -988,13 +997,21 @@ class ApiControllerTest < ActionController::TestCase
     #fetch requester list
     post(:check_requesters, {'myUsername' => @username2,'myPassword' =>"password", })
     assert_response(:success)
-    assert '{"status code":1,"follow requests":["%s"]}'%@username1 == @response.body, @response.body
+    assert '{"status code":1,"follow requests":["%s","%s"]}'%(@username1,@username3) == @response.body, @response.body
     #permit follow
     post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username1 })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+    #permit follow
+    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username3 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
     #check permission after handshake
     post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+    #check permission after handshake
+    post(:check_permission, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 })
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #try to follow
