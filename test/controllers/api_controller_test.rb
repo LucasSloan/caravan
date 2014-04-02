@@ -997,7 +997,7 @@ class ApiControllerTest < ActionController::TestCase
     #fetch requester list
     post(:check_requesters, {'myUsername' => @username2,'myPassword' =>"password", })
     assert_response(:success)
-    assert '{"status code":1,"follow requests":["%s","%s"]}'%(@username1,@username3) == @response.body, @response.body
+    assert '{"status code":1,"follow requests":["%s","%s"]}'%[@username1,@username3] == @response.body, @response.body
     #permit follow
     post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username1 })
     assert_response(:success)
