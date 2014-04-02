@@ -107,13 +107,8 @@ class User < ActiveRecord::Base
     if @user == nil
       return -4
     end
-    if self.follow_requests.exists?(FollowRequest.find_by(requester: @user.id))
-      self.follow_requests.destroy(FollowRequest.find_by(requester: @user.id))
-      self.followers.create(follower_id: @user.id)
-      return 1
-    else
-      return -4
-    end
+    self.followers.create(follower_id: @user.id)
+    return 1
   end
 
   def check_permission(username)
@@ -135,8 +130,8 @@ class User < ActiveRecord::Base
     list = []
     self.follow_requests.each do |r|
       list << User.find(r.requester).username
+      self.follow_requests.destroy(r)
     end
-    self.follow_requests.destroy
     return list
   end
 

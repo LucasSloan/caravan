@@ -129,7 +129,7 @@ class UserTest < ActiveSupport::TestCase
     other.start_broadcast(89.9,90.1)
     User.follow_request(other.username, follower)
     assert(other.check_requesters.first == follower.username, "wrong set of follow requesters")
-    other.invitation_response(follower.username)
+    assert(other.invitation_response(follower.username) == 1, "failed to give permission")
     assert(follower.check_permission(other.username) == 1, "not given permission")
     
     
@@ -165,7 +165,7 @@ class UserTest < ActiveSupport::TestCase
     assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
     assert(broadcaster.follow_requests.last.requester == follower2.id, "Incorrect requester id")
     assert(User.follow_cancellation(broadcaster.username, follower) == 1, "Cancellation failed")
-    #assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
+    assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
     assert(broadcaster.follow_requests.first.requester == follower2.id, "Incorrect requester id")
   end
 end
