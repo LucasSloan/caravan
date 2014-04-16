@@ -65,7 +65,7 @@ post 'api/check_permission' => 'api#check_permission'
 post 'api/follow' => 'api#follow'
 post 'api/follow_cancellation' => 'api#follow_cancellation'
 post 'api/set_follower_position' => 'api#set_follower_position'
-get  'api/get_follower_positions' => 'api#get_follower_positions'
-get  'api/get_recently_followed' => 'api#get_recently_followed'
+post 'api/get_follower_positions' => 'api#get_follower_positions'
+post 'api/get_recently_followed' => 'api#get_recently_followed'
 
 end
