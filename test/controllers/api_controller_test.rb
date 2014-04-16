@@ -731,4 +731,11 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1,"history":["%s","%s"]}'%[users(:two).username,users(:one).username] == @response.body, @response.body
   end
+
+  test "empty follow list" do
+    #get recently followed list
+    get(:get_recently_followed, {}, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"history":[]}' == @response.body, @response.body
+  end
 end
