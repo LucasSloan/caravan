@@ -5,10 +5,10 @@ class ApiController < ApplicationController
     user = User.validate_user(params[:username], params[:password])
     if user.is_a? User
       msg = { 'status code' => 1 }
+      session[:auth_token] = user.generate_auth_token
     else
       msg = { 'status code' => user }
     end
-    session[:auth_token] = user.generate_auth_token
     render :json => msg
   end
 
@@ -16,10 +16,10 @@ class ApiController < ApplicationController
     user = User.add(params[:username], params[:password])
     if user.is_a? User
       msg = { 'status code' => 1 }
+      session[:auth_token] = user.generate_auth_token
     else
       msg = { 'status code' => user }
     end
-    session[:auth_token] = user.generate_auth_token
     render :json => msg
   end
 
