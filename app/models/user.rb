@@ -17,6 +17,15 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.validate_user_cookie(auth_token)
+    @user = User.find_by(auth_token: auth_token)
+    if @user == nil
+      return -1
+    else
+      return @user
+    end
+  end
+
   def self.add(username, password)
     if username == '' or username.length > 128
       return -2
@@ -37,6 +46,13 @@ class User < ActiveRecord::Base
     else
       return -1
     end
+  end
+
+  def generate_auth_token
+    token = Digest::SHA1.hexdigest("--%s--%s--" % [self.username, Time.now.asctime])
+    self.auth_token = token
+    self.save
+    return token
   end
 
   def start_broadcast(latitude, longitude)

@@ -968,54 +968,57 @@ class ApiControllerTest < ActionController::TestCase
     post(:create_user, {'username' => @username1, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+    @token1 = @request.session[:auth_token]
     #create account2
     @username2 = SecureRandom.hex
     post(:create_user, {'username' => @username2, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+    @token2 = @request.session[:auth_token]
     #create account3
     @username3 = SecureRandom.hex
     post(:create_user, {'username' => @username3, 'password' => "password"})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+    @token3 = @request.session[:auth_token]
     #broadcast
-    post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" })
+    post(:broadcast, {'username' => @username2, 'password' => "password", 'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => @token2})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #submit follow_request
-    post(:follow_request, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    post(:follow_request, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token1})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #submit follow_request
-    post(:follow_request, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 })
+    post(:follow_request, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token3})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #check permission before handshake
-    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token1})
     assert_response(:success)
     assert '{"status code":2}' == @response.body, @response.body
     #fetch requester list
-    post(:check_requesters, {'myUsername' => @username2,'myPassword' =>"password", })
+    post(:check_requesters, {'myUsername' => @username2,'myPassword' =>"password", }, {'auth_token' => @token2})
     assert_response(:success)
     assert '{"status code":1,"follow requests":["%s","%s"]}'%[@username1,@username3] == @response.body, @response.body
     #permit follow
-    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username1 })
+    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username1 }, {'auth_token' => @token2})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #permit follow
-    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username3 })
+    post(:invitation_response, {'myUsername' => @username2,'myPassword' =>"password", 'username' =>@username3 }, {'auth_token' => @token2})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #check permission after handshake
-    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    post(:check_permission, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token1})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #check permission after handshake
-    post(:check_permission, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 })
+    post(:check_permission, {'myUsername' => @username3,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token3})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
     #try to follow
-    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 })
+    post(:follow, {'myUsername' => @username1,'myPassword' =>"password", 'username' =>@username2 }, {'auth_token' => @token1})
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
   end
