@@ -1,0 +1,14 @@
+one:
+  username: John
+  broadcasting: false
+  auth_token: secret1
+
+two:
+  username: Alex
+  broadcasting: false
+  auth_token: secret2
+
+three:
+  username: Carl
+  broadcasting: false
+  auth_token: secret3
