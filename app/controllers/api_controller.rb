@@ -28,13 +28,31 @@ class ApiController < ApplicationController
     if user.is_a? User
       lat = params[:latitude].to_f
       long = params[:longitude].to_f
-      puts lat
-      puts long
       if lat > 90 or lat < -90 or long > 180 or long < -180
         msg = { 'status code' => -3 }
       else
         user.start_broadcast(lat, long)
         msg = { 'status code' => 1 }
+      end
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def set_follower_position
+    user = User.validate_user_cookie(session[:auth_token])
+    if user.is_a? User
+      lat = params[:latitude].to_f
+      long = params[:longitude].to_f
+      if lat > 90 or lat < -90 or long > 180 or long < -180
+        msg = { 'status code' => -3 }
+      else
+        if user.set_follower_position(lat, long)
+          msg = { 'status code' => 1 }
+        else
+          msg = { 'status code' => -2 }
+        end
       end
     else
       msg = { 'status code' => user }
@@ -101,6 +119,20 @@ class ApiController < ApplicationController
     render :json => msg
   end
 
+  def get_follower_positions
+    user = User.validate_user_cookie(session[:auth_token])
+    if user.is_a? User
+      if user.broadcasting
+        msg = { 'status code' => 1, 'user positions' => user.follower_positions}
+      else
+        msg = { 'status code' => -3 }
+      end
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
   def invitation_response
     user = User.validate_user_cookie(session[:auth_token])
     if user.is_a? User
@@ -116,6 +148,16 @@ class ApiController < ApplicationController
     if user.is_a? User
       user.stop_broadcast
       msg = { 'status code' => 1 }
+    else
+      msg = { 'status code' => user }
+    end
+    render :json => msg
+  end
+
+  def get_recently_followed
+    user = User.validate_user_cookie(session[:auth_token])
+    if user.is_a? User
+      msg = { 'status code' => 1, 'history' => user.recently_followed}
     else
       msg = { 'status code' => user }
     end

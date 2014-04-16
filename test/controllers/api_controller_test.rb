@@ -844,4 +844,148 @@ class ApiControllerTest < ActionController::TestCase
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
   end
+
+  test "good get follower positions" do
+    #broadcast
+    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #submit follow_request
+    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #submit follow_request
+    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission before handshake
+    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":2}' == @response.body, @response.body
+
+    #fetch requester list
+    post(:check_requesters, {}, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"follow requests":["%s","%s"]}'%[users(:two).username,users(:three).username] == @response.body, @response.body
+
+    #permit follow
+    post(:invitation_response, {'username' =>users(:two).username }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #permit follow
+    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission after handshake
+    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission after handshake
+    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow
+    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+
+    #try to follow
+    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+
+    #set follower position
+    post(:set_follower_position, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #set follower position
+    post(:set_follower_position, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #fetch requester list
+    get(:get_follower_positions, {}, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"user positions":{"%s":[%.2f,%.2f],"%s":[%.2f,%.2f]}}'%[users(:two).username,22.34,32.54,users(:three).username,22.34,32.54] == @response.body, @response.body
+  end
+
+  test "good get recently followed" do
+    #broadcast
+    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #submit follow_request
+    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission before handshake
+    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":2}' == @response.body, @response.body
+
+    #permit follow
+    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission after handshake
+    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow
+    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+
+    #stop broadcast
+    post(:stop_broadcast, {}, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #broadcast
+    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #submit follow_request
+    post(:follow_request, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission before handshake
+    post(:check_permission, {'username' =>users(:two).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":2}' == @response.body, @response.body
+
+    #permit follow
+    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #check permission after handshake
+    post(:check_permission, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow
+    post(:follow, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+
+    #get recently followed list
+    get(:get_recently_followed, {}, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"history":["%s","%s"]}'%[users(:two).username,users(:one).username] == @response.body, @response.body
+  end
 end

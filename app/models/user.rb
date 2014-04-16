@@ -4,6 +4,7 @@ class User < ActiveRecord::Base
   has_many :positions
   has_many :followers, dependent: :destroy
   has_many :follow_requests, dependent: :destroy
+  has_many :recently_followeds, -> { order("created_at DESC").limit(10) }, dependent: :destroy
 
   def self.validate_user(username, password)
     @user = User.find_by(username: username)
@@ -56,9 +57,18 @@ class User < ActiveRecord::Base
   end
 
   def start_broadcast(latitude, longitude)
-    @new_location = self.positions.create(latitude: latitude, longitude: longitude, timestamp: Time.now)
+    self.positions.create(latitude: latitude, longitude: longitude, timestamp: Time.now)
     self.broadcasting = true
     self.save
+  end
+
+  def set_follower_position(latitude, longitude)
+    if Follower.exists?(follower_id: self.id)
+      self.positions.create(latitude: latitude, longitude: longitude, timestamp: Time.now)
+      return true
+    else
+      return false
+    end
   end
 
   def stop_broadcast
@@ -75,6 +85,10 @@ class User < ActiveRecord::Base
     end
     if @user.broadcasting
       if requester.check_permission(username) == 1
+        if requester.recently_followeds.exists?(RecentlyFollowed.find_by(followed: @user.id, user_id: requester.id))
+          requester.recently_followeds.destroy(RecentlyFollowed.find_by(followed: @user.id, user_id: requester.id))
+        end
+        requester.recently_followeds.create(followed: @user.id)
         return @user.positions.first
       else
         return -3
@@ -103,11 +117,11 @@ class User < ActiveRecord::Base
       return -3
     end
     if @user.broadcasting
-      if @user.follow_requests.exists?(FollowRequest.find_by(requester: requester.id))
-        @user.follow_requests.destroy(FollowRequest.find_by(requester: requester.id))
+      if @user.follow_requests.exists?(FollowRequest.find_by(requester: requester.id, user_id: @user.id))
+        @user.follow_requests.destroy(FollowRequest.find_by(requester: requester.id, user_id: @user.id))
       end
-      if @user.followers.exists?(Follower.find_by(follower_id: requester.id))
-        @user.followers.destroy(Follower.find_by(follower_id: requester.id))
+      if @user.followers.exists?(Follower.find_by(follower_id: requester.id, user_id: @user.id))
+        @user.followers.destroy(Follower.find_by(follower_id: requester.id, user_id: @user.id))
       end
       return 1
     else
@@ -135,11 +149,19 @@ class User < ActiveRecord::Base
     if !@user.broadcasting
       return -3
     end
-    if @user.followers.exists?(Follower.find_by(follower_id: self.id))
+    if @user.followers.exists?(Follower.find_by(follower_id: self.id, user_id: @user.id))
       return 1
     else
       return 2
     end
+  end
+
+  def recently_followed
+    list = []
+    self.recently_followeds.each do |r|
+      list << User.find(r.followed).username
+    end
+    return list
   end
 
   def check_requesters
@@ -147,6 +169,15 @@ class User < ActiveRecord::Base
     self.follow_requests.each do |r|
       list << User.find(r.requester).username
       self.follow_requests.destroy(r)
+    end
+    return list
+  end
+
+  def follower_positions
+    list = Hash.new
+    self.followers.each do |r|
+      user = User.find(r.follower_id)
+      list[user.username] = [user.positions.first.latitude, user.positions.first.longitude]
     end
     return list
   end
