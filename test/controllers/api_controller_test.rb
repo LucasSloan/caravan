@@ -532,210 +532,178 @@ class ApiControllerTest < ActionController::TestCase
   end
   
   test "good follow" do
-    #broadcast
+    #broadcast (1)
     post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #submit follow_request
+	#Start broadcast (2)
+	post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+	
+	#Confirm history list is empty (3)
+    post(:get_recently_followed, {}, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"history":[]}' == @response.body, @response.body 
+
+    #submit follow_request (2)
     post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #submit follow_request
+    #submit follow_request (3)
     post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #check permission before handshake
+    #check permission before handshake (2)
     post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":2}' == @response.body, @response.body
 
-    #fetch requester list
+    #fetch requester list (1)
     post(:check_requesters, {}, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1,"follow requests":["%s","%s"]}'%[users(:two).username,users(:three).username] == @response.body, @response.body
 
-    #permit follow
+    #permit follow (1)
     post(:invitation_response, {'username' =>users(:two).username }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #permit follow
+    #permit follow (1)
     post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #check permission after handshake
+    #check permission after handshake (2)
     post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #check permission after handshake
+    #check permission after handshake (3)
     post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #try to follow
+    #try to follow (2)
     post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
 
-    #try to follow
-    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
-  end
 
-  test "good get follower positions" do
-    #broadcast
-    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #submit follow_request
-    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #submit follow_request
-    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission before handshake
-    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":2}' == @response.body, @response.body
-
-    #fetch requester list
-    post(:check_requesters, {}, {'auth_token' => users(:one).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"follow requests":["%s","%s"]}'%[users(:two).username,users(:three).username] == @response.body, @response.body
-
-    #permit follow
-    post(:invitation_response, {'username' =>users(:two).username }, {'auth_token' => users(:one).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #permit follow
-    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission after handshake
-    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission after handshake
-    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #try to follow
-    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
-
-    #try to follow
+	
+	
+	
+    #try to follow (3)
     post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
     assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
 
-    #set follower position
-    post(:set_follower_position, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:two).auth_token})
+	
+    #Confirm history list contains user1 (3)
+    post(:get_recently_followed, { }, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #set follower position
-    post(:set_follower_position, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:three).auth_token})
+    assert '{"status code":1,"history":["%s"]}'%users(:one).username == @response.body, @response.body
+	
+	#Stop following user1 (3)
+	post(:follow_cancellation, {'username' =>users(:one).username}, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
+	assert '{"status code":1}' == @response.body, @response.body
 
-    #fetch requester list
-    get(:get_follower_positions, {}, {'auth_token' => users(:one).auth_token})
+	#get follower positions (1)
+	post(:get_follower_positions, { }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
-    assert '{"status code":1,"user positions":{"%s":[%.2f,%.2f],"%s":[%.2f,%.2f]}}'%[users(:two).username,22.34,32.54,users(:three).username,22.34,32.54] == @response.body, @response.body
-  end
-
-  test "good get recently followed" do
-    #broadcast
-    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
+    assert '{"status code":1,"user positions":{"%s":[22.34,32.54]}}'%users(:two).username == @response.body, @response.body	
+	
+	#Stop following user1 (2)
+	post(:follow_cancellation, {'username' =>users(:one).username}, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
+	assert '{"status code":1}' == @response.body, @response.body	
+	
 
-    #submit follow_request
-    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission before handshake
-    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":2}' == @response.body, @response.body
-
-    #permit follow
-    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission after handshake
-    post(:check_permission, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #try to follow
-    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
-
-    #stop broadcast
-    post(:stop_broadcast, {}, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #broadcast
-    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:two).auth_token})
-    assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #submit follow_request
+	
+    #submit follow_request to acnt2 (3)
     post(:follow_request, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
     assert_response(:success)
-    assert '{"status code":1}' == @response.body, @response.body
-
-    #check permission before handshake
-    post(:check_permission, {'username' =>users(:two).username }, {'auth_token' => users(:two).auth_token})
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+    #fetch requester list (2)
+    post(:check_requesters, {}, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
-    assert '{"status code":2}' == @response.body, @response.body
+    assert '{"status code":1,"follow requests":["%s"]}'%users(:three).username == @response.body, @response.body
 
-    #permit follow
+    #permit follow (2)
     post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
-    #check permission after handshake
-    post(:check_permission, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    #try to follow (3)
+    post(:follow, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body	
+	
+    #Confirm history list contains user1 & user2 in the right order(3)
+    post(:get_recently_followed, { }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"history":["%s","%s"]}'%[users(:two).username,users(:one).username] == @response.body, @response.body	
+	
+	#Stop following user2 (3)
+	post(:follow_cancellation, {'username' =>users(:two).username}, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+	assert '{"status code":1}' == @response.body, @response.body	
+	
+	#submit follow_request to acnt1 (3)
+    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body	
+	
+    #fetch requester list (1)
+    post(:check_requesters, {}, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"follow requests":["%s"]}'%users(:three).username == @response.body, @response.body
+
+    #permit follow (1)
+    post(:invitation_response, {'username' =>users(:three).username }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
+    #try to follow (3)
+    post(:follow, {'username' =>users(:one).username }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body		
+	
+    #Confirm history list contains user1 & user2 in the right order(3)
+    post(:get_recently_followed, { }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"history":["%s","%s"]}'%[users(:one).username,users(:two).username] == @response.body, @response.body	
+  end
+  
+  #GET_FOLLOWER_POSITIONS tests
+  #good get_follower_positions will be part of the good follow test
+  test "get follower positions with bad Auth Token" do
     #try to follow
-    post(:follow, {'username' =>users(:two).username }, {'auth_token' => users(:three).auth_token})
+    post(:get_follower_positions, { }, {'auth_token' => "Bad auth token"})
     assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+    assert '{"status code":-1}' == @response.body, @response.body
+  end    
+  
+  test "get follower positions with non-broadcasting user" do
+    #try to follow
+    post(:get_follower_positions, { }, {'auth_token' => users(:three).auth_token})
+    assert_response(:success)
+    assert '{"status code":-3}' == @response.body, @response.body
+  end     
+  
+  #GET RECENTLY FOLLOWED tests
+  # good get_recently_followed will part of the good follow test  
+  test "get recently followed with bad Auth Token" do
+    #try to follow
+    post(:get_recently_followed, { }, {'auth_token' => "Bad auth token"})
+    assert_response(:success)
+    assert '{"status code":-1}' == @response.body, @response.body
+  end  
 
-    #get recently followed list
-    get(:get_recently_followed, {}, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"history":["%s","%s"]}'%[users(:two).username,users(:one).username] == @response.body, @response.body
-  end
-
-  test "empty follow list" do
-    #get recently followed list
-    get(:get_recently_followed, {}, {'auth_token' => users(:three).auth_token})
-    assert_response(:success)
-    assert '{"status code":1,"history":[]}' == @response.body, @response.body
-  end
+  
 end
