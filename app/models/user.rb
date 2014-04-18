@@ -177,7 +177,9 @@ class User < ActiveRecord::Base
     list = Hash.new
     self.followers.each do |r|
       user = User.find(r.follower_id)
-      list[user.username] = [user.positions.first.latitude, user.positions.first.longitude]
+      if !user.positions.nil?
+        list[user.username] = [user.positions.first.latitude, user.positions.first.longitude]
+      end
     end
     return list
   end
