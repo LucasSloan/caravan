@@ -106,10 +106,11 @@ class ApiController < ApplicationController
     if user.is_a? User
       location = User.follow(params[:username], user)
       if location.is_a? Position
-        #if !params[:update] && 
-        #  msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}
-        #else
-        msg = { 'status code' => 2 , 'latitude' => location.latitude, 'longitude' => location.longitude, 'directions' => get_directions(location.latitude, location.latitude, user.positions.first.latitude, user.positions.first.longitude)}
+        if user.update_position(params[:update], location)
+          msg = { 'status code' => 2 , 'latitude' => location.latitude, 'longitude' => location.longitude, 'directions' => get_directions(location.latitude, location.latitude, user.positions.first.latitude, user.positions.first.longitude)}
+        else
+          msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}
+        end
       else
         msg = { 'status code' => location - 2 }
       end

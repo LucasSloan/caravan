@@ -5,6 +5,8 @@ class User < ActiveRecord::Base
   has_many :followers, dependent: :destroy
   has_many :follow_requests, dependent: :destroy
   has_many :recently_followeds, -> { order("created_at DESC").limit(10) }, dependent: :destroy
+  has_one :current_destination, :class_name => "Position"
+  has_one :current_origin, :class_name => "Position"
 
   def self.validate_user(username, password)
     @user = User.find_by(username: username)
@@ -76,6 +78,55 @@ class User < ActiveRecord::Base
     self.followers.clear
     self.follow_requests.clear
     self.save
+  end
+
+  # http://www.movable-type.co.uk/scripts/latlong.html
+  # loc1 and loc2 are arrays of [latitude, longitude]
+  def distance lat, lon
+    lat1 = lat
+    lon1 = lon
+    lat2 = current_destination.latitude
+    lon2 = current_destination.longitude
+    dLat = (lat2-lat1) * Math::PI / 180;
+    dLon = (lon2-lon1) * Math::PI / 180;
+    a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math::PI / 180) * Math.cos(lat2 * Math::PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    d = 6371 * c; # Multiply by 6371 to get Kilometers
+  end
+
+  def update_position(update, broadcaster_position)
+    if self.positions.nil? || self.positions.first == nil
+      return false
+    elsif self.positions.first.timestamp < Time.now - 1800
+      return false
+    end
+    puts update
+    if update
+      self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_postion.longitude, timestamp: Time.now)
+      self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      return true
+    elsif self.current_destination.nil? || self.current_origin.nil?
+      self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_postion.longitude, timestamp: Time.now)
+      self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      return true
+    elsif self.current_destination.timestamp + 1800 < Time.now || self.current_origin.timestamp + 1800 < Time.now
+      self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_postion.longitude, timestamp: Time.now)
+      self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      return true
+    elsif distance(self.positions.first.latitude, self.positions.first.longitude) < 0.1 * distance(current_origin.latitude, current_origin.longitude)
+      self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_postion.longitude, timestamp: Time.now)
+      self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      return true
+    elsif distance(self.positions.first.latitude, self.positions.first.longitude) > 2 * distance(current_origin.latitude, current_origin.longitude)
+      self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_postion.longitude, timestamp: Time.now)
+      self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      return true
+    else
+      puts 'Hi'
+      return false
+    end
   end
 
   def self.follow(username, requester)

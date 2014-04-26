@@ -705,5 +705,30 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":-1}' == @response.body, @response.body
   end  
 
-  
+  test "good directions" do
+    #broadcast (1)
+    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #submit follow_request (2)
+    post(:follow_request, {'username' =>users(:one).username }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #permit follow (1)
+    post(:invitation_response, {'username' =>users(:two).username }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #set position (2)
+    post(:set_follower_position, {'latitude' => "22.2", 'longitude' => "32.3" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+  end
 end
