@@ -1,3 +1,5 @@
+require 'net/http'
+
 class ApiController < ApplicationController
   skip_before_filter  :verify_authenticity_token
 
@@ -90,12 +92,24 @@ class ApiController < ApplicationController
     render :json => msg
   end
 
+  def get_directions(lat1, long1, lat2, long2)
+    uri = URI('http://maps.googleapis.com/maps/api/directions/json')
+    params = {:origin => '%f,%f'%[lat1,long1], :destination => '%f,%f'%[lat2,long2], :sensor => 'false', :mode => 'driving', :alternatives => 'true'}
+    uri.query = URI.encode_www_form(params)
+    
+    res = Net::HTTP.get_response(uri)
+    return res.body if res.is_a?(Net::HTTPSuccess)
+  end
+
   def follow
     user = User.validate_user_cookie(session[:auth_token])
     if user.is_a? User
       location = User.follow(params[:username], user)
       if location.is_a? Position
-        msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}
+        #if !params[:update] && 
+        #  msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}
+        #else
+        msg = { 'status code' => 2 , 'latitude' => location.latitude, 'longitude' => location.longitude, 'directions' => get_directions(location.latitude, location.latitude, user.positions.first.latitude, user.positions.first.longitude)}
       else
         msg = { 'status code' => location - 2 }
       end
