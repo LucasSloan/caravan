@@ -11,10 +11,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140416051902) do
+ActiveRecord::Schema.define(version: 20140428193322) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "current_destinations", force: true do |t|
+    t.integer  "user_id"
+    t.float    "latitude"
+    t.float    "longitude"
+    t.datetime "timestamp"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "current_destinations", ["user_id"], name: "index_current_destinations_on_user_id", using: :btree
+
+  create_table "current_origins", force: true do |t|
+    t.integer  "user_id"
+    t.float    "latitude"
+    t.float    "longitude"
+    t.datetime "timestamp"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "current_origins", ["user_id"], name: "index_current_origins_on_user_id", using: :btree
 
   create_table "follow_requests", force: true do |t|
     t.integer  "requester"

@@ -707,7 +707,7 @@ class ApiControllerTest < ActionController::TestCase
 
   test "good directions" do
     #broadcast (1)
-    post(:broadcast, {'latitude' => "22.34", 'longitude' => "32.54" }, {'auth_token' => users(:one).auth_token})
+    post(:broadcast, {'latitude' => "37.863435", 'longitude' => "-122.251075" }, {'auth_token' => users(:one).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
@@ -722,13 +722,96 @@ class ApiControllerTest < ActionController::TestCase
     assert '{"status code":1}' == @response.body, @response.body
 
     #set position (2)
-    post(:set_follower_position, {'latitude' => "22.2", 'longitude' => "32.3" }, {'auth_token' => users(:two).auth_token})
+    post(:set_follower_position, {'latitude' => "37.892357", 'longitude' => "-122.114009" }, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
 
     #try to follow (2)
     post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
     assert_response(:success)
-    assert '{"status code":1,"latitude":22.34,"longitude":32.54}' == @response.body, @response.body
+    response = JSON.parse @response.body
+    assert response["status code"] == 2, response["status code"]
+    assert response["latitude"] == 37.863435, response["latitude"]
+    assert response["longitude"] == -122.251075, response["longitude"]
+    assert response.has_key?("directions") == true
+
+    #set position (2)
+    post(:set_follower_position, {'latitude' => "37.844702", 'longitude' => "-122.251392" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 1, response["status code"]
+    assert response["latitude"] == 37.863435, response["latitude"]
+    assert response["longitude"] == -122.251075, response["longitude"]
+    assert response.has_key?("directions") == false
+
+    #broadcast (1)
+    post(:broadcast, {'latitude' => "37.868381", 'longitude' => "-122.258906" }, {'auth_token' => users(:one).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #set position (2)
+    post(:set_follower_position, {'latitude' => "37.862003", 'longitude' => "-122.253320" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 2, response["status code"]
+    assert response["latitude"] == 37.868381, response["latitude"]
+    assert response["longitude"] == -122.258906, response["longitude"]
+    assert response.has_key?("directions") == true
+
+    #set position (2)
+    post(:set_follower_position, {'latitude' => "37.867055", 'longitude' => "-122.256216" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 1, response["status code"]
+    assert response["latitude"] == 37.868381, response["latitude"]
+    assert response["longitude"] == -122.258906, response["longitude"]
+    assert response.has_key?("directions") == false
+
+    #set position (2)
+    post(:set_follower_position, {'latitude' => "37.844702", 'longitude' => "-122.251392" }, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 2, response["status code"]
+    assert response["latitude"] == 37.868381, response["latitude"]
+    assert response["longitude"] == -122.258906, response["longitude"]
+    assert response.has_key?("directions") == true
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => false}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 1, response["status code"]
+    assert response["latitude"] == 37.868381, response["latitude"]
+    assert response["longitude"] == -122.258906, response["longitude"]
+    assert response.has_key?("directions") == false
+
+    #try to follow (2)
+    post(:follow, {'username' =>users(:one).username, 'update' => true}, {'auth_token' => users(:two).auth_token})
+    assert_response(:success)
+    response = JSON.parse @response.body
+    assert response["status code"] == 2, response["status code"]
+    assert response["latitude"] == 37.868381, response["latitude"]
+    assert response["longitude"] == -122.258906, response["longitude"]
+    assert response.has_key?("directions") == true
   end
 end

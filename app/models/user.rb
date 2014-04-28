@@ -5,8 +5,8 @@ class User < ActiveRecord::Base
   has_many :followers, dependent: :destroy
   has_many :follow_requests, dependent: :destroy
   has_many :recently_followeds, -> { order("created_at DESC").limit(10) }, dependent: :destroy
-  has_one :current_destination, :class_name => "Position"
-  has_one :current_origin, :class_name => "Position"
+  has_one :current_destination
+  has_one :current_origin
 
   def self.validate_user(username, password)
     @user = User.find_by(username: username)
@@ -102,43 +102,28 @@ class User < ActiveRecord::Base
     elsif self.positions.first.timestamp < Time.now - 1800
       return false
     end
-    #puts update
-	#puts broadcaster_position.latitude
+
     if update
-	  #puts 'hi'
-	  #puts broadcaster_position.latitude
-	  #puts broadcaster_position.longitude
-      #self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      current_destination self.current_destination = Position.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      #self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
-	    current_origin self.current_origin = Position.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      self.current_destination = CurrentDestination.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
+      self.current_origin = CurrentOrigin.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
       return true
     elsif self.current_destination.nil? || self.current_origin.nil?
-      #self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-	   current_destination self.current_destination = Position.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      #self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
-	    current_origin self.current_origin = Position.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      self.current_destination = CurrentDestination.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
+      self.current_origin = CurrentOrigin.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
       return true
     elsif self.current_destination.timestamp + 1800 < Time.now || self.current_origin.timestamp + 1800 < Time.now
-      #self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-	    current_destination self.current_destination = Position.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      #self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
-	    current_origin self.current_origin = Position.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      self.current_destination = CurrentDestination.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
+      self.current_origin = CurrentOrigin.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
       return true
     elsif distance(self.positions.first.latitude, self.positions.first.longitude) < 0.1 * distance(current_origin.latitude, current_origin.longitude)
-      #self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-	    current_destination self.current_destination = Position.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      #self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
-	    current_origin self.current_origin = Position.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      self.current_destination = CurrentDestination.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
+      self.current_origin = CurrentOrigin.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
       return true
     elsif distance(self.positions.first.latitude, self.positions.first.longitude) > 2 * distance(current_origin.latitude, current_origin.longitude)
-      #self.current_destination.create_current_destination(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-	    current_destination self.current_destination = Position.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
-      #self.current_origin.create_current_origin(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
-	    current_origin self.current_origin = Position.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
+      self.current_destination = CurrentDestination.create(latitude: broadcaster_position.latitude, longitude: broadcaster_position.longitude, timestamp: Time.now)
+      self.current_origin = CurrentOrigin.create(latitude: self.positions.first.latitude, longitude: self.positions.first.longitude, timestamp: Time.now)
       return true
     else
-      #puts 'Hi'
       return false
     end
   end
