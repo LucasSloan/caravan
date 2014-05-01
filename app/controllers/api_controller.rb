@@ -15,13 +15,18 @@ class ApiController < ApplicationController
   end
 
   def create_user
-    user = User.add(params[:username], params[:password])
+    user = User.add(params[:username], params[:password], params[:email])
     if user.is_a? User
       msg = { 'status code' => 1 }
       session[:auth_token] = user.generate_auth_token
     else
       msg = { 'status code' => user }
     end
+    render :json => msg
+  end
+
+  def reset_password
+    msg = {'status code' => User.reset_password(params[:username])}
     render :json => msg
   end
 
@@ -65,7 +70,11 @@ class ApiController < ApplicationController
   def follow_request
     user = User.validate_user_cookie(session[:auth_token])
     if user.is_a? User
-      msg = { 'status code' => User.follow_request(params[:username], user)}
+      if params[:message] == nil || params[:message].length < 256
+        msg = { 'status code' => User.follow_request(params[:username], user, params[:message])}
+      else
+        msg = { 'status code' => -2 }
+      end
     else
       msg = { 'status code' => user }
     end
@@ -107,10 +116,6 @@ class ApiController < ApplicationController
       location = User.follow(params[:username], user)
       if location.is_a? Position
         if user.update_position(params[:update], location)
-          puts location.latitude
-          puts location.longitude
-          puts user.positions.first.latitude
-          puts user.positions.first.longitude
           msg = { 'status code' => 2 , 'latitude' => location.latitude, 'longitude' => location.longitude, 'directions' => get_directions(location.latitude, location.longitude, user.positions.first.latitude, user.positions.first.longitude)}
         else
           msg = { 'status code' => 1 , 'latitude' => location.latitude, 'longitude' => location.longitude}

@@ -5,8 +5,8 @@ class User < ActiveRecord::Base
   has_many :followers, dependent: :destroy
   has_many :follow_requests, dependent: :destroy
   has_many :recently_followeds, -> { order("created_at DESC").limit(10) }, dependent: :destroy
-  has_one :current_destination
-  has_one :current_origin
+  has_one :current_destination, dependent: :destroy
+  has_one :current_origin, dependent: :destroy
 
   def self.validate_user(username, password)
     @user = User.find_by(username: username)
@@ -29,12 +29,15 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.add(username, password)
+  def self.add(username, password, email)
     if username == '' or username.length > 128
       return -2
     end
     if password == '' or password.length > 128
       return -3
+    end
+    if !/\A[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]+\z/.match(email)
+      return -4
     end
     if User.find_by(username: username) == nil
       #puts 'found no such user'
@@ -42,6 +45,7 @@ class User < ActiveRecord::Base
       @user.username = username
       @user.password = password
       @user.password_confirmation = password
+      @user.email = email
       @user.locations = []
       @user.broadcasting = false
       @user.save
@@ -148,16 +152,28 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.follow_request(username, requester)
+  def self.follow_request(username, requester, message)
     @user = User.find_by(username: username)
     if @user == nil
       return -3
     end
     if @user.broadcasting
-      @user.follow_requests.create(requester: requester.id)
+      @user.follow_requests.create(requester: requester.id, message: message)
       return 1
     else
       return -4
+    end
+  end
+
+  def self.reset_password(username)
+    @user = User.find_by(username: username)
+    if @user == nil
+      return -1
+    else
+      @user.password = '123456'
+      @user.password_confirmation = '123456'
+      UserMailer.welcome_email(@user)
+      return 1
     end
   end
 
@@ -173,6 +189,8 @@ class User < ActiveRecord::Base
       if @user.followers.exists?(Follower.find_by(follower_id: requester.id, user_id: @user.id))
         @user.followers.destroy(Follower.find_by(follower_id: requester.id, user_id: @user.id))
       end
+      requester.current_destination = nil
+      requester.current_origin = nil
       return 1
     else
       return -4
@@ -217,7 +235,7 @@ class User < ActiveRecord::Base
   def check_requesters
     list = []
     self.follow_requests.each do |r|
-      list << User.find(r.requester).username
+      list << [User.find(r.requester).username, r.message]
       self.follow_requests.destroy(r)
     end
     return list

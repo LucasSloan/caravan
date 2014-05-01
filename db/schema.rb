@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140428193322) do
+ActiveRecord::Schema.define(version: 20140430232218) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -43,6 +43,7 @@ ActiveRecord::Schema.define(version: 20140428193322) do
     t.integer  "user_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "message"
   end
 
   add_index "follow_requests", ["user_id"], name: "index_follow_requests_on_user_id", using: :btree
@@ -84,6 +85,7 @@ ActiveRecord::Schema.define(version: 20140428193322) do
     t.datetime "updated_at"
     t.string   "password_digest"
     t.string   "auth_token"
+    t.string   "email"
   end
 
   add_index "users", ["username"], name: "index_users_on_username", using: :btree

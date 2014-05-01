@@ -67,5 +67,6 @@ post 'api/follow_cancellation' => 'api#follow_cancellation'
 post 'api/set_follower_position' => 'api#set_follower_position'
 get 'api/get_follower_positions' => 'api#get_follower_positions'
 post 'api/get_recently_followed' => 'api#get_recently_followed'
+post 'api/reset_password' => 'api#reset_password'
 
 end

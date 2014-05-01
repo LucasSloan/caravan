@@ -33,4 +33,15 @@ Caravan::Application.configure do
 
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: "smtp.gmail.com",
+    port: 465,
+    authentication: "plain",
+    user_name: "caravancs169@gmail.com",
+    password: "ubjtbbqnerlbhngsvaqvatcnffjbeq?",
+    enable_starttls_auto: true
+  }
+  config.action_mailer.raise_delivery_errors = true
 end
