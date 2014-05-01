@@ -86,6 +86,10 @@ class ApiControllerTest < ActionController::TestCase
     post(:reset_password, {'username' => 'resettester'})
     assert_response(:success)
     assert '{"status code":1}' == @response.body, @response.body
+
+    post(:login, {'username' => 'resettester', 'password' => "123456"})
+    assert_response(:success)
+    assert '{"status code":1}' == @response.body, @response.body
   end
 
   test "bad reset password" do

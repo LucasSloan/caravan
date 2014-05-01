@@ -170,9 +170,15 @@ class User < ActiveRecord::Base
     if @user == nil
       return -1
     else
-      @user.password = '123456'
-      @user.password_confirmation = '123456'
-      UserMailer.welcome_email(@user)
+      if Rails.env.test?
+        @temp = '123456'
+      else
+        @temp = SecureRandom.hex(6)
+      end
+      @user.password = @temp
+      @user.password_confirmation = @temp
+      @user.save
+      UserMailer.welcome_email(@user).deliver
       return 1
     end
   end
