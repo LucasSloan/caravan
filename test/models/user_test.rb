@@ -19,50 +19,50 @@ class UserTest < ActiveSupport::TestCase
 
   test "test good create" do
     #User.testAPI_resetFixture
-    result = User.add("username0","password")
+    result = User.add("username0","password","valid@vaild.com")
     assert((result.is_a? User), "valid add should return the new user")
 
     s = ""
     for i in 1..128
       s << "a"
     end
-    result = User.add(s,"password")
+    result = User.add(s,"password","valid@vaild.com")
     assert((result.is_a? User), "valid add should return the new user")
   end
   
   test "test create with invalid username" do
     #User.testAPI_resetFixture
-    result = User.add("","password")
+    result = User.add("","password","valid@vaild.com")
     assert(result ==ERR_CREATE_BAD_USERNAME,"empty username should not be accepted")
     
     s = ""
     for i in 1..129
       s << "b"
     end
-    result = User.add(s,"password")
+    result = User.add(s,"password","valid@vaild.com")
     assert(result ==ERR_CREATE_BAD_USERNAME,"too-long username should not be accepted")
   end
   
   test "test create with bad password" do
     #User.testAPI_resetFixture
-    result = User.add("username1","")
+    result = User.add("username1","","valid@vaild.com")
     assert(result ==ERR_CREATE_BAD_PASSWORD,"empty password should not be accepted")
     
     s = ""
     for i in 1..129
       s << "b"
     end
-    result = User.add("username2",s)
+    result = User.add("username2",s,"valid@vaild.com")
     assert(result ==ERR_CREATE_BAD_PASSWORD,"too-long password should not be accepted")
   end
 
   test "test create existent user" do
     #User.testAPI_resetFixture
     
-    result = User.add("username3","password")
+    result = User.add("username3","password","valid@vaild.com")
     assert((result.is_a? User), "valid add should return the new user")
     
-    result = User.add("username3","password")
+    result = User.add("username3","password","valid@vaild.com")
     assert(result == ERR_CREATE_USER_EXISTS, "trying to add an existing should result in error")
   end
 
@@ -74,7 +74,7 @@ class UserTest < ActiveSupport::TestCase
 
   test "test validate_user with bad password" do
     #User.testAPI_resetFixture
-    result = User.add("username4","password")
+    result = User.add("username4","password","valid@valid.com")
     assert((result.is_a? User), "valid add should return the new user")
     
     result = User.validate_user("username4","not the password")
@@ -83,7 +83,7 @@ class UserTest < ActiveSupport::TestCase
   
   test "test validate_user with valid user" do
     #User.testAPI_resetFixture
-    result = User.add("username5","password")
+    result = User.add("username5","password","valid@vaild.com")
     assert((result.is_a? User), "valid add should return the new user")
     
     result = User.validate_user("username5","password")
@@ -92,7 +92,7 @@ class UserTest < ActiveSupport::TestCase
   
   test "test start_broadcast and stop_broadcast" do
     #User.testAPI_resetFixture
-    result = User.add("username6","password")
+    result = User.add("username6","password","valid@vaild.com")
     assert((result.is_a? User), "valid add should return the new user")
     
     result.start_broadcast(89.9,90.1)
@@ -108,15 +108,15 @@ class UserTest < ActiveSupport::TestCase
   
   test "test follow non-existant user" do
     #User.testAPI_resetFixture
-    follower = User.add("username20","password")
+    follower = User.add("username20","password","valid@vaild.com")
     result = User.follow("username8",follower)
     assert(result ==ERR_FOLLOW_BAD_USERNAME,"cannot follow non-existant user")
   end
   
   test "test follow non-broadcasting user" do
     #User.testAPI_resetFixture
-    other = User.add("username9","password")
-    follower = User.add("username19","password")
+    other = User.add("username9","password","valid@vaild.com")
+    follower = User.add("username19","password","valid@vaild.com")
     result = User.follow("username9", follower)
     assert(result ==ERR_FOLLOW_NOT_BROADCASTING,"cannot follow non-broadcasting user")
   end  
@@ -124,11 +124,10 @@ class UserTest < ActiveSupport::TestCase
   
   test "test follow broadcasting user" do
     #User.testAPI_resetFixture
-    other = User.add("username11","password")
-    follower = User.add("username17","password")
+    other = User.add("username11","password","valid@vaild.com")
+    follower = User.add("username17","password","valid@vaild.com")
     other.start_broadcast(89.9,90.1)
-    User.follow_request(other.username, follower)
-    assert(other.check_requesters.first == follower.username, "wrong set of follow requesters")
+    assert User.follow_request(other.username, follower, "") == 1
     assert(other.invitation_response(follower.username) == 1, "failed to give permission")
     assert(follower.check_permission(other.username) == 1, "not given permission")
     
@@ -139,28 +138,28 @@ class UserTest < ActiveSupport::TestCase
   end  
 
   test "test follow request" do
-    broadcaster = User.add("username12","password")
-    follower = User.add("username13","password")
+    broadcaster = User.add("username12","password","valid@vaild.com")
+    follower = User.add("username13","password","valid@vaild.com")
     broadcaster.start_broadcast(0,0)
-    assert(User.follow_request(broadcaster.username, follower) == 1, "Request failled")
+    assert(User.follow_request(broadcaster.username, follower, "") == 1, "Request failled")
     assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
     assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
-    follower2 = User.add("username14", "password")
-    assert(User.follow_request(broadcaster.username, follower2) == 1, "Request failled")
+    follower2 = User.add("username14", "password","valid@vaild.com")
+    assert(User.follow_request(broadcaster.username, follower2, "") == 1, "Request failled")
     assert(broadcaster.follow_requests.size == 2, broadcaster.follow_requests.size)
     assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
     assert(broadcaster.follow_requests.last.requester == follower2.id, "Incorrect requester id")
   end
 
   test "test follow cancellation" do
-    broadcaster = User.add("username15","password")
-    follower = User.add("username16","password")
+    broadcaster = User.add("username15","password","valid@vaild.com")
+    follower = User.add("username16","password","valid@vaild.com")
     broadcaster.start_broadcast(0,0)
-    assert(User.follow_request(broadcaster.username, follower) == 1, "Request failled")
+    assert(User.follow_request(broadcaster.username, follower,"") == 1, "Request failled")
     assert(broadcaster.follow_requests.size == 1, broadcaster.follow_requests.size)
     assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
-    follower2 = User.add("username17", "password")
-    assert(User.follow_request(broadcaster.username, follower2) == 1, "Request failled")
+    follower2 = User.add("username17", "password","valid@vaild.com")
+    assert(User.follow_request(broadcaster.username, follower2,"") == 1, "Request failled")
     assert(broadcaster.follow_requests.size == 2, broadcaster.follow_requests.size)
     assert(broadcaster.follow_requests.first.requester == follower.id, "Incorrect requester id")
     assert(broadcaster.follow_requests.last.requester == follower2.id, "Incorrect requester id")
